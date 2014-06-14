@@ -88,8 +88,13 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   real* rand2 = (real*)malloc(numPE*(numPathGroup)*paraNode*sizeof(real));
   printf("strike=%f, run for %d times\n", strike, numPathGroup*paraNode);
 
-  *out_rand1 = rand1;
-  *out_rand2 = rand2;
+  if (out_rand1 != NULL) {
+    *out_rand1 = rand1;
+  }
+
+  if (out_rand2 != NULL) {
+    *out_rand2 = rand2;
+  }
 
   OptionPricing(
                 numPE*initMax,//initsize
@@ -249,32 +254,32 @@ double cpuOptionPricing(
   return sum/N;
 }
 
-int main(int argc, char *argv[]) {
+/* int main(int argc, char *argv[]) { */
 
-  // -- Parameters --
-  real strike = 0.01;
-  real sigma = 0.02;
-  real timestep = 0.05;
-  int numTimeStep = (int)(10/0.05);
-  int numMaturity = 2000000;
-  int paraNode = 50;
-  int numPathGroup = 20;
-  int numPE = 4;
-  double *rand1, *rand2;
-  real T = 10;
+/*   // -- Parameters -- */
+/*   real strike = 0.01; */
+/*   real sigma = 0.02; */
+/*   real timestep = 0.05; */
+/*   int numTimeStep = (int)(10/0.05); */
+/*   int numMaturity = 2000000; */
+/*   int paraNode = 50; */
+/*   int numPathGroup = 20; */
+/*   int numPE = 4; */
+/*   double *rand1, *rand2; */
+/*   real T = 10; */
 
-  double dfeResult = optionPricing(strike, sigma, timestep, numMaturity,
-                                   paraNode, numPathGroup, T,
-                                   &rand1, &rand2);
+/*   double dfeResult = optionPricing(strike, sigma, timestep, numMaturity, */
+/*                                    paraNode, numPathGroup, T, */
+/*                                    &rand1, &rand2); */
 
-  double cpuResult = cpuOptionPricing(strike, sigma, timestep, numMaturity,
-                                      paraNode, numPathGroup, T,
-                                      rand1, rand2);
+/*   double cpuResult = cpuOptionPricing(strike, sigma, timestep, numMaturity, */
+/*                                       paraNode, numPathGroup, T, */
+/*                                       rand1, rand2); */
 
-  if (fabs(cpuResult - dfeResult) > 1E-6) {
-    printf("Error! Expected: %lf Got: %lf\n", cpuResult, dfeResult);
-    return 1;
-  }
+/*   if (fabs(cpuResult - dfeResult) > 1E-6) { */
+/*     printf("Error! Expected: %lf Got: %lf\n", cpuResult, dfeResult); */
+/*     return 1; */
+/*   } */
 
-  return 0;
-}
+/*   return 0; */
+/* } */
