@@ -127,13 +127,15 @@ $(DFEMAXDIR)/$(PRJ).max: $(ENGINEFILES)
 	cp $(DFEMAXDIR)/$(PRJ).h $(DFEMAXDIR)/Maxfiles.h
 
 par: $(DFEMAXDIR)/$(PRJ).max
+	cp $(DFEMAXDIR)/$(PRJ.max) .
+	cp $(DFEMAXDIR)/Maxfiles.h .
 
 #not generate the max file automatically
-$(PRJ)_dfe.o: 
-	$(SLICCOMPILE) $< $(DFEMAXDIR)/$(PRJ).max $@
+$(PRJ)_dfe.o:
+	$(SLICCOMPILE) $< $(PRJ).max $@
 
 $(PRJ)_dfec.o: $(CPUFILES)
-	$(CC) $< $(ALL_FLAGS) -I$(DFEMAXDIR) -DDESIGN_NAME=$(PRJ) -c -o $@
+	$(CC) $< $(ALL_FLAGS) -DDESIGN_NAME=$(PRJ) -c -o $@
 
 $(PRJ)_dfe: $(PRJ)_dfe.o $(PRJ)_dfec.o
 	$(CC) $(ALL_FLAGS) -o $@ $^ $(LFLAGS)
