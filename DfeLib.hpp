@@ -3,5 +3,7 @@
 
 #include "ParallelMovingAverage/ParallelMovingAverage.hpp"
 
+#include "OptionPricing/OptionPricing.hpp"
+
 
 #endif /* _DFELIB_H_ */

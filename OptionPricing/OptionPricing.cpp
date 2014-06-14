@@ -23,12 +23,12 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   //need to change the value in the java file
   int numPE = 4;
 
-  real *maturity = malloc(sizeof(real) * numPE * numMaturity);
-  real *maturity_diff = malloc(sizeof(real) * numPE * numMaturity);
-  real *f = malloc(sizeof(real) * numPE * numMaturity);
-  real *fout = malloc(sizeof(real) * 2048);
-  unsigned int *seed1 = malloc(sizeof(unsigned int) * 64*100);
-  unsigned int *seed2 = malloc(sizeof(unsigned int) * 64*100);
+  real *maturity = (real *)malloc(sizeof(real) * numPE * numMaturity);
+  real *maturity_diff = (real *)malloc(sizeof(real) * numPE * numMaturity);
+  real *f = (real *)malloc(sizeof(real) * numPE * numMaturity);
+  real *fout = (real *)malloc(sizeof(real) * 2048);
+  unsigned int *seed1 = (unsigned int *)malloc(sizeof(unsigned int) * 64*100);
+  unsigned int *seed2 = (unsigned int *)malloc(sizeof(unsigned int) * 64*100);
   int i, j, k;
   for(i=0; i<64; i++){
     seed1[i] = i;
@@ -154,9 +154,9 @@ double cpuOptionPricing(
                         double *rand1, double *rand2)
 {
   int numPE = 4;
-  real *maturity = malloc(sizeof(real) * numPE * numMaturity);
-  real *maturity_diff = malloc(sizeof(real) * numPE * numMaturity);
-  real *f = malloc(sizeof(real) * numPE * numMaturity);
+  real *maturity = (real *)malloc(sizeof(real) * numPE * numMaturity);
+  real *maturity_diff = (real *)malloc(sizeof(real) * numPE * numMaturity);
+  real *f = (real *)malloc(sizeof(real) * numPE * numMaturity);
 
   double sum = 0.0;
   int N = (numPathGroup)*paraNode;
