@@ -1,3 +1,4 @@
+#include <omp.h>
 /***
     Run a maxfile in parallel on multiple DFEs using DFE groups and
     OpenMP.
@@ -10,6 +11,7 @@
 #include "ParallelMovingAverage.hpp"
 #include "ParallelMovingAverageMaxfiles.h"
 #include "MaxSLiCInterface.h"
+#include "../DfeFunctionLib.hpp"
 
 // Using MaxelerOS managed groups of DFEs
 static void MovingAverageDFE_groups(int numEngines,
@@ -63,21 +65,20 @@ void MovingAverageDFE(int width, int n, int *in, int* out,
   int itemsPerDfe = n / numEngines;
 
   for (int i = 0; i < numEngines; i++) {
-    for (int j = 0; j < itemsPerDfe; j++) {
-      int bytes = sizeof(ParallelMovingAverage_actions_t);
-      actions[i] = (ParallelMovingAverage_actions_t *)malloc(bytes);
-      actions[i]->param_N = itemsPerDfe;
-      actions[i]->instream_a = in + itemsPerDfe * i;
-      actions[i]->outstream_output = out + itemsPerDfe * i;
-    }
+    int bytes = sizeof(ParallelMovingAverage_actions_t);
+    actions[i] = (ParallelMovingAverage_actions_t *)malloc(bytes);
+    actions[i]->param_N = itemsPerDfe;
+    actions[i]->instream_a = in + itemsPerDfe * i;
+    actions[i]->outstream_output = out + itemsPerDfe * i;
   }
 
   max_file_t *maxfile = ParallelMovingAverage_init();
 
-  if (useGroups)
+  if (useGroups) {
     MovingAverageDFE_groups(numEngines, maxfile, actions);
-  else
+  } else {
     MovingAverageDFE_custom(numEngines, maxfile, actions, dfeIds);
+  }
 
   // need to redo the values around the boundaries between the batches
   for (int i = 0; i < numEngines; i++) {
@@ -106,32 +107,37 @@ void check_results(int n, int* out, int* exp) {
     }
 }
 
-// int main(int argc, char** argv) {
+int main(int argc, char** argv) {
 
-//   int n = 384 * 1000000;
-//   const int numEngines = 4;
+  int n = 384 * 1000000;
+  const int numEngines = 4;
 
-//   int *a = (int *)calloc(n, sizeof(int));
-//   int *out = (int *)calloc(n, sizeof(int));
-//   for(int i = 0; i < n; ++i)
-//     a[i] = i + 1;
-//   int *exp = (int *)calloc(n, sizeof(int));
-//   for (int i = 1; i < n - 1; i++)
-//     exp[i] = (a[i - 1] + a[i] + a[i + 1]) / 3;
+  #pragma omp parallel
+{
+    printf("Thread number: %d", omp_get_thread_num());
+}
 
-//   char *dfeIds[] = {"0", "1", "2", "3"};
-//   printf("Running on DFE with groups.\n");
-//   MovingAverageDFE(3, n, a, out, numEngines, dfeIds, true);
-//   check_results(n, a, exp);
+  int *a = (int *)calloc(n, sizeof(int));
+  int *out = (int *)calloc(n, sizeof(int));
+  for(int i = 0; i < n; ++i)
+    a[i] = i + 1;
+  int *exp = (int *)calloc(n, sizeof(int));
+  for (int i = 1; i < n - 1; i++)
+    exp[i] = (a[i - 1] + a[i] + a[i + 1]) / 3;
 
-//   printf("Running on DFE with custom mode.\n");
-//   MovingAverageDFE(3, n, a, out, numEngines, dfeIds, false);
-//   check_results(n, a, exp);
+  char *dfeIds[] = {"0", "1", "2", "3"};
+  printf("Running on DFE with groups.\n");
+  MovingAverageDFE(3, n, a, out, numEngines, dfeIds, true);
+  check_results(n, a, exp);
 
-//   free(a);
-//   free(exp);
-//   free(out);
+  printf("Running on DFE with custom mode.\n");
+  MovingAverageDFE(3, n, a, out, numEngines, dfeIds, false);
+  check_results(n, a, exp);
 
-//   printf("Test passed!\n");
-//   return 0;
-// }
+  free(a);
+  free(exp);
+  free(out);
+
+  printf("Test passed!\n");
+  return 0;
+}
