@@ -9,7 +9,8 @@ double optionPricing(double strike,
 		     int numPathGroup,
 		     double T,
                      double **out_rand1,
-		     double **out_rand2);
+		     double **out_rand2,
+		     int numDFEs);
 
 double cpuOptionPricing(double strike,
 			double sigma,
