@@ -11,7 +11,6 @@
 #include "ParallelMovingAverage.hpp"
 #include "ParallelMovingAverageMaxfiles.h"
 #include "MaxSLiCInterface.h"
-#include "../DfeFunctionLib.hpp"
 
 // Using MaxelerOS managed groups of DFEs
 static void MovingAverageDFE_groups(int numEngines,
