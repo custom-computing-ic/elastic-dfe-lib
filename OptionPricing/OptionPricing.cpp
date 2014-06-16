@@ -96,29 +96,45 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
     *out_rand2 = rand2;
   }
 
-  OptionPricing(
-                numPE*initMax,//initsize
-                numPE*paraNode,//nodesize
-                numPE*(numPathGroup)*paraNode,//pathsize
-                numPE*64,//seedsize
-                initMax + (numMaturity-1)*(numPathGroup)*paraNode,//ticks
-                T,//T
-                exp(-f[0]*T),//discount
-                numMaturity, // numMaturity
-                numPathGroup,//numPath
-                outputRand,
-                sigma,
-                sqrt(T),
-                strike,
-                f,//fin
-                maturity,
-                maturity_diff,
-                seed1,
-                seed2,
-                rand1,
-                rand2,
-                fout//result
-                );
+  int numEngines = 1;
+  OptionPricing_actions_t *actions[numEngines];
+  // TODO: distribute data over engines
+
+  for (int i = 0; i < numEngines; i++) {
+    int bytes = sizeof(OptionPricing_actions_t);
+    actions[i] = (OptionPricing_actions_t *)malloc(bytes);
+    actions[i]-> param_initsize = numPE*initMax;
+    actions[i]-> param_nodesize = numPE * paraNode;
+    actions[i]-> param_pathsize = numPE * numPathGroup * paraNode;
+    actions[i]-> param_seedsize = numPE * 64;
+    actions[i]-> ticks_OptionPricingKernel = initMax + (numMaturity-1)*(numPathGroup)*paraNode;
+    actions[i]-> inscalar_OptionPricingKernel_T = T;
+    actions[i]-> inscalar_OptionPricingKernel_discount = exp(-f[0]*T);
+    actions[i]-> inscalar_OptionPricingKernel_numMaturity = numMaturity;
+    actions[i]-> inscalar_OptionPricingKernel_numPath = numPathGroup;
+    actions[i]-> inscalar_OptionPricingKernel_outputRand = outputRand;
+    actions[i]->inscalar_OptionPricingKernel_sigma = sigma;
+    actions[i]->inscalar_OptionPricingKernel_sqrt_t = sqrt(T);
+    actions[i]->inscalar_OptionPricingKernel_strike = strike;
+    actions[i]->instream_fin = f;
+    actions[i]->instream_maturity = maturity;
+    actions[i]->instream_maturity_diff = maturity_diff;
+    actions[i]->instream_seed = seed1;
+    actions[i]->instream_seed2 = seed2;
+    actions[i]->outstream_randOut = rand1;
+    actions[i]->outstream_randOut2 = rand2;
+    actions[i]->outstream_result = fout;
+  }
+
+  max_file_t *maxfile = OptionPricing_init();
+  max_group_t *group = max_load_group(maxfile, MAXOS_EXCLUSIVE, "local", numEngines);
+
+#pragma omp parallel for
+  for (int i = 0; i < numEngines; i++)
+    OptionPricing_run_group(group, actions[i]);
+
+  max_unload_group(group);
+  max_file_free(maxfile);
 
   printf("done!\n");
   //  for(i = 0; i< numMaturity; i++){
