@@ -254,32 +254,45 @@ double cpuOptionPricing(
   return sum/N;
 }
 
-/* int main(int argc, char *argv[]) { */
+// int main(int argc, char *argv[]) {
 
-/*   // -- Parameters -- */
-/*   real strike = 0.01; */
-/*   real sigma = 0.02; */
-/*   real timestep = 0.05; */
-/*   int numTimeStep = (int)(10/0.05); */
-/*   int numMaturity = 2000000; */
-/*   int paraNode = 50; */
-/*   int numPathGroup = 20; */
-/*   int numPE = 4; */
-/*   double *rand1, *rand2; */
-/*   real T = 10; */
+//   // -- Parameters --
+//   double strike = 0.01;
+//   double sigma = 0.02;
+//   double timestep = 0.05;
+//   int numTimeStep = (int)(10/0.05);
+//   int numMaturity = 6;
+//   int paraNode = 50;
+//   int numPathGroup = 10000000;
+//   int numPE = 4;
+//   double *rand1, *rand2;
+//   double T = 10;
 
-/*   double dfeResult = optionPricing(strike, sigma, timestep, numMaturity, */
-/*                                    paraNode, numPathGroup, T, */
-/*                                    &rand1, &rand2); */
+//   printf("Running main...\n");
 
-/*   double cpuResult = cpuOptionPricing(strike, sigma, timestep, numMaturity, */
-/*                                       paraNode, numPathGroup, T, */
-/*                                       rand1, rand2); */
+//   struct timeval t1, t2;
 
-/*   if (fabs(cpuResult - dfeResult) > 1E-6) { */
-/*     printf("Error! Expected: %lf Got: %lf\n", cpuResult, dfeResult); */
-/*     return 1; */
-/*   } */
+//   gettimeofday(&t1, NULL);
+//   double dfeResult = optionPricing(strike, sigma, timestep, numMaturity,
+//                                    paraNode, numPathGroup, T,
+//                                    &rand1, &rand2);
+//   gettimeofday(&t2, NULL);
+//   long long time = ((t2.tv_sec - t1.tv_sec) * 1E6 + t2.tv_usec - t1.tv_usec) / 1E3;
+//   printf("FPGA Took %lld ms\n", time);
 
-/*   return 0; */
-/* } */
+//   gettimeofday(&t1, NULL);
+//   double cpuResult = cpuOptionPricing(strike, sigma, timestep, numMaturity,
+//                                       paraNode, numPathGroup, T,
+//                                       rand1, rand2);
+//   gettimeofday(&t2, NULL);
+//   time = ((t2.tv_sec - t1.tv_sec) * 1E6 + t2.tv_usec - t1.tv_usec) / 1E3;
+//   printf("CPU Took %lld ms\n", time);
+
+
+//   if (fabs(cpuResult - dfeResult) > 1E-6) {
+//     printf("Error! Expected: %lf Got: %lf\n", cpuResult, dfeResult);
+//     return 1;
+//   }
+
+//   return 0;
+// }
