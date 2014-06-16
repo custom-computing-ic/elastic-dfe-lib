@@ -107,37 +107,32 @@ void check_results(int n, int* out, int* exp) {
     }
 }
 
-int main(int argc, char** argv) {
+// int main(int argc, char** argv) {
 
-  int n = 384 * 1000000;
-  const int numEngines = 4;
+//   int n = 384 * 1000000;
+//   const int numEngines = 4;
 
-  #pragma omp parallel
-{
-    printf("Thread number: %d", omp_get_thread_num());
-}
+//   int *a = (int *)calloc(n, sizeof(int));
+//   int *out = (int *)calloc(n, sizeof(int));
+//   for(int i = 0; i < n; ++i)
+//     a[i] = i + 1;
+//   int *exp = (int *)calloc(n, sizeof(int));
+//   for (int i = 1; i < n - 1; i++)
+//     exp[i] = (a[i - 1] + a[i] + a[i + 1]) / 3;
 
-  int *a = (int *)calloc(n, sizeof(int));
-  int *out = (int *)calloc(n, sizeof(int));
-  for(int i = 0; i < n; ++i)
-    a[i] = i + 1;
-  int *exp = (int *)calloc(n, sizeof(int));
-  for (int i = 1; i < n - 1; i++)
-    exp[i] = (a[i - 1] + a[i] + a[i + 1]) / 3;
+//   char *dfeIds[] = {"0", "1", "2", "3"};
+//   printf("Running on DFE with groups.\n");
+//   MovingAverageDFE(3, n, a, out, numEngines, dfeIds, true);
+//   check_results(n, a, exp);
 
-  char *dfeIds[] = {"0", "1", "2", "3"};
-  printf("Running on DFE with groups.\n");
-  MovingAverageDFE(3, n, a, out, numEngines, dfeIds, true);
-  check_results(n, a, exp);
+//   printf("Running on DFE with custom mode.\n");
+//   MovingAverageDFE(3, n, a, out, numEngines, dfeIds, false);
+//   check_results(n, a, exp);
 
-  printf("Running on DFE with custom mode.\n");
-  MovingAverageDFE(3, n, a, out, numEngines, dfeIds, false);
-  check_results(n, a, exp);
+//   free(a);
+//   free(exp);
+//   free(out);
 
-  free(a);
-  free(exp);
-  free(out);
-
-  printf("Test passed!\n");
-  return 0;
-}
+//   printf("Test passed!\n");
+//   return 0;
+// }
