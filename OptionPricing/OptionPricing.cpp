@@ -17,7 +17,8 @@
 
 double optionPricing(double strike, double sigma, double timestep, int numMaturity,
                      int paraNode, int numPathGroup, double T,
-                     double **out_rand1, double **out_rand2
+                     double **out_rand1, double **out_rand2,
+                     int numEngines
                      ) {
 
   //need to change the value in the java file
@@ -27,10 +28,11 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   real *maturity_diff = (real *)malloc(sizeof(real) * numPE * numMaturity);
   real *f = (real *)malloc(sizeof(real) * numPE * numMaturity);
   real *fout = (real *)malloc(sizeof(real) * 2048);
-  unsigned int *seed1 = (unsigned int *)malloc(sizeof(unsigned int) * 64*100);
-  unsigned int *seed2 = (unsigned int *)malloc(sizeof(unsigned int) * 64*100);
+  int seedsize = 64 * 100;
+  unsigned int *seed1 = (unsigned int *)malloc(sizeof(unsigned int) * seedsize);
+  unsigned int *seed2 = (unsigned int *)malloc(sizeof(unsigned int) * seedsize);
   int i, j, k;
-  for(i=0; i<64; i++){
+  for( i = 0; i < 64; i++){
     seed1[i] = i;
     seed2[i] = 7-i;
     /* printf("%d %d, ", i, 7-i); */
@@ -96,34 +98,40 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
     *out_rand2 = rand2;
   }
 
-  int numEngines = 1;
   OptionPricing_actions_t *actions[numEngines];
   // TODO: distribute data over engines
 
+#pragma openmp parallel for
   for (int i = 0; i < numEngines; i++) {
     int bytes = sizeof(OptionPricing_actions_t);
     actions[i] = (OptionPricing_actions_t *)malloc(bytes);
-    actions[i]-> param_initsize = numPE*initMax;
-    actions[i]-> param_nodesize = numPE * paraNode;
-    actions[i]-> param_pathsize = numPE * numPathGroup * paraNode;
-    actions[i]-> param_seedsize = numPE * 64;
-    actions[i]-> ticks_OptionPricingKernel = initMax + (numMaturity-1)*(numPathGroup)*paraNode;
-    actions[i]-> inscalar_OptionPricingKernel_T = T;
-    actions[i]-> inscalar_OptionPricingKernel_discount = exp(-f[0]*T);
-    actions[i]-> inscalar_OptionPricingKernel_numMaturity = numMaturity;
-    actions[i]-> inscalar_OptionPricingKernel_numPath = numPathGroup;
-    actions[i]-> inscalar_OptionPricingKernel_outputRand = outputRand;
+    actions[i]->param_initsize = numPE*initMax;
+    actions[i]->param_nodesize = numPE * paraNode;
+    actions[i]->param_pathsize = numPE * (numPathGroup / numEngines) * paraNode;
+    actions[i]->param_seedsize = numPE * 64;
+
+    actions[i]->ticks_OptionPricingKernel = (initMax + (numMaturity-1)*(numPathGroup / numEngines)*paraNode);
+
+    actions[i]->inscalar_OptionPricingKernel_T = T;
+    actions[i]->inscalar_OptionPricingKernel_discount = exp(-f[0]*T);
+    actions[i]->inscalar_OptionPricingKernel_numMaturity = numMaturity;
+    actions[i]->inscalar_OptionPricingKernel_numPath = numPathGroup / numEngines;
+    actions[i]->inscalar_OptionPricingKernel_outputRand = outputRand;
     actions[i]->inscalar_OptionPricingKernel_sigma = sigma;
     actions[i]->inscalar_OptionPricingKernel_sqrt_t = sqrt(T);
     actions[i]->inscalar_OptionPricingKernel_strike = strike;
+
     actions[i]->instream_fin = f;
     actions[i]->instream_maturity = maturity;
     actions[i]->instream_maturity_diff = maturity_diff;
-    actions[i]->instream_seed = seed1;
-    actions[i]->instream_seed2 = seed2;
+
+    actions[i]->instream_seed = seed1; // + seedsize / numEngines * i;
+    actions[i]->instream_seed2 = seed2; // + seedsize / numEngines * i;
+
     actions[i]->outstream_randOut = rand1;
     actions[i]->outstream_randOut2 = rand2;
-    actions[i]->outstream_result = fout;
+
+    actions[i]->outstream_result = fout + i * paraNode;
   }
 
   max_file_t *maxfile = OptionPricing_init();
@@ -143,7 +151,7 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
 
   //add them together
   real sum = 0;
-  for(i = 0; i< paraNode; i++){
+  for(i = 0; i < paraNode * numEngines; i++){
     //for(j=0;j<numPE;j++){
     //  if(j==0){
     //          printf("fout[%d] = %lf\n", i, fout[i*numPE+j]);
