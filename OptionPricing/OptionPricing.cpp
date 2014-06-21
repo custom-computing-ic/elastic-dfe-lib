@@ -152,7 +152,6 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   for (int i = 0; i < numEngines; i++)
     free(actions[i]);
 
-  max_unload_group(group);
   max_file_free(maxfile);
 
   real sum = 0;
