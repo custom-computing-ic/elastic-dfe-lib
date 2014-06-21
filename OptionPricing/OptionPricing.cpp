@@ -38,7 +38,6 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   for( i = 0; i < 64; i++){
     seed1[i] = i;
     seed2[i] = 7-i;
-    /* printf("%d %d, ", i, 7-i); */
   }
 
   for(i=0;i<16;i++){
@@ -47,19 +46,12 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
       seed1[i*4*numPE+j*4+1] = i*4+1;
       seed1[i*4*numPE+j*4+2] = i*4+2;
       seed1[i*4*numPE+j*4+3] = i*4+3;
-      /* printf("%d %d %d %d\n", seed1[i*4*numPE+j*4], seed1[i*4*numPE+j*4+1], seed1[i*4*numPE+j*4+2], seed1[i*4*numPE+j*4+3]); */
       seed2[i*4*numPE+j*4]   = 7- i*4;
       seed2[i*4*numPE+j*4+1] = 7-(i*4+1);
       seed2[i*4*numPE+j*4+2] = 7-(i*4+2);
       seed2[i*4*numPE+j*4+3] = 7-(i*4+3);
-      /* printf("%d %d %d %d\n", seed2[i*4*numPE+j*4], seed2[i*4*numPE+j*4+1], seed2[i*4*numPE+j*4+2], seed2[i*4*numPE+j*4+3]); */
     }
   }
-
-  /* for(i=0;i<16*4*4; i++){ */
-  /*   printf("%d ", seed1[i]); */
-  /* } */
-
 
   for(j=0;j<numPE;j++){
     maturity[0*numPE+j] = 0;
@@ -102,7 +94,6 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   }
 
   OptionPricing_actions_t *actions[numEngines];
-  // TODO: distribute data over engines
 
 #pragma openmp parallel for
   for (int i = 0; i < numEngines; i++) {
@@ -142,47 +133,43 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   // buggy, with unjustified performance variations under a large
   // number of requests
 
-  // max_group_t *group = max_load_group(maxfile, MAXOS_EXCLUSIVE, "local", numEngines);
-  // #pragma omp parallel for
-  //   for (int i = 0; i < numEngines; i++)
-  //     OptionPricing_run_group(group, actions[i]);
-  //  max_unload_group(group);
+  max_group_t *group = max_load_group(maxfile, MAXOS_EXCLUSIVE, "local", numEngines);
+  #pragma omp parallel for
+    for (int i = 0; i < numEngines; i++)
+      OptionPricing_run_group(group, actions[i]);
+   max_unload_group(group);
 
-#pragma omp parallel for
-  for (int i = 0; i < numEngines; i++) {
-    char id[100];
-    sprintf(id, "local:%d", i);
-    max_engine_t *engine = max_load(maxfile, id);
-    OptionPricing_run(engine, actions[i]);
-    max_unload(engine);
-  }
+// #pragma omp parallel for
+//   for (int i = 0; i < numEngines; i++) {
+//     char id[100];
+//     sprintf(id, "local:%d", i);
+//     max_engine_t *engine = max_load(maxfile, id);
+//     OptionPricing_run(engine, actions[i]);
+//     max_unload(engine);
+//   }
 
+  // free resources
+  for (int i = 0; i < numEngines; i++)
+    free(actions[i]);
 
+  max_unload_group(group);
   max_file_free(maxfile);
 
-  //  printf("done!\n");
-  //  for(i = 0; i< numMaturity; i++){
-  //    printf("fin[%d] = %lf\n", i, f[i*numPE]);
-  //  }
-
-  //add them together
   real sum = 0;
-  for(i = 0; i < paraNode * numEngines; i++){
-    //for(j=0;j<numPE;j++){
-    //  if(j==0){
-    //          printf("fout[%d] = %lf\n", i, fout[i*numPE+j]);
-    //          sum += fout[i*numPE+j];
-    //  }
-    //}
+  for(i = 0; i < paraNode * numEngines; i++)
     sum += fout[i*numPE];
-  }
-  /*for(i = 0; i< (numPathGroup)*paraNode; i++){
-    printf("rand1[%d] = %lf\n", i, rand1[i]);
-    }*/
 
   double dfeResult = sum/(numPathGroup)/paraNode;
   //  printf("result = %lf\n", dfeResult);
 
+  free(maturity);
+  free(maturity_diff);
+  free(f);
+  free(fout);
+  free(rand1);
+  free(rand2);
+  free(seed1);
+  free(seed2);
 
   return dfeResult;
 }
@@ -288,6 +275,9 @@ double cpuOptionPricing(
     sum += swapPrice;
   }
 
+  free(maturity);
+  free(maturity_diff);
+  free(f);
   free(rand1);
   free(rand2);
 
