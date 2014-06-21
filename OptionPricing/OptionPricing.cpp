@@ -80,7 +80,7 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   int initMax = 8;
   real* rand1 = (real*)malloc(numPE*(numPathGroup)*paraNode*sizeof(real));
   real* rand2 = (real*)malloc(numPE*(numPathGroup)*paraNode*sizeof(real));
-  printf("strike=%f, run for %d times\n", strike, numPathGroup*paraNode);
+  //  printf("strike=%f, run for %d times\n", strike, numPathGroup*paraNode);
 
   if (out_rand1 != NULL) {
     *out_rand1 = rand1;
@@ -144,7 +144,7 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
     sum += fout[i*numPE];
 
   double dfeResult = sum/(numPathGroup)/paraNode;
-  printf("result = %lf\n", dfeResult);
+  //  printf("result = %lf\n", dfeResult);
 
   free(maturity);
   free(maturity_diff);
