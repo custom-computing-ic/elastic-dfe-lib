@@ -24,6 +24,9 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   //need to change the value in the java file
   int numPE = 4;
 
+  printf("--> Bitstream::optionPricing(numMaturity=%d, numPathGroup=%d)\n",
+	 numMaturity, numPathGroup);
+
   real *maturity = (real *)malloc(sizeof(real) * numPE * numMaturity);
   real *maturity_diff = (real *)malloc(sizeof(real) * numPE * numMaturity);
   real *f = (real *)malloc(sizeof(real) * numPE * numMaturity);
@@ -135,13 +138,26 @@ double optionPricing(double strike, double sigma, double timestep, int numMaturi
   }
 
   max_file_t *maxfile = OptionPricing_init();
-  max_group_t *group = max_load_group(maxfile, MAXOS_EXCLUSIVE, "local", numEngines);
+  // TODO[paul-g] at the moment of writing Maxeler's group API seems
+  // buggy, with unjustified performance variations under a large
+  // number of requests
+
+  // max_group_t *group = max_load_group(maxfile, MAXOS_EXCLUSIVE, "local", numEngines);
+  // #pragma omp parallel for
+  //   for (int i = 0; i < numEngines; i++)
+  //     OptionPricing_run_group(group, actions[i]);
+  //  max_unload_group(group);
 
 #pragma omp parallel for
-  for (int i = 0; i < numEngines; i++)
-    OptionPricing_run_group(group, actions[i]);
+  for (int i = 0; i < numEngines; i++) {
+    char id[100];
+    sprintf(id, "local:%d", i);
+    max_engine_t *engine = max_load(maxfile, id);
+    OptionPricing_run(engine, actions[i]);
+    max_unload(engine);
+  }
 
-  max_unload_group(group);
+
   max_file_free(maxfile);
 
   //  printf("done!\n");
